@@ -5,9 +5,9 @@ import { getCategories, getProducts } from "@/lib/medusa";
 import { siteConfig } from "@/lib/site";
 
 const fallbackCategories = [
-  "Custom Hoodies",
-  "Graphic Sweatshirts",
-  "Streetwear Basics",
+  "Tarot Decks",
+  "Oracle Cards",
+  "Divination Tools",
 ];
 
 export default async function Home() {
@@ -48,25 +48,25 @@ export default async function Home() {
                 href="#products"
                 className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:scale-[1.02]"
               >
-                Shop the first drop
+                Explore Collection
               </a>
               <Link
-                href="/products/custom-graphic-hoodie"
+                href="/products/demo-product"
                 className="rounded-full border border-white/15 px-6 py-3 text-sm font-semibold text-white/85 transition hover:bg-white/5"
               >
-                Open flagship product
+                View Featured Deck
               </Link>
             </div>
           </div>
 
           <div className="grid gap-6">
             <div className="rounded-[2rem] border border-white/10 bg-black/30 p-6">
-              <div className="text-xs uppercase tracking-[0.3em] text-white/45">Brand angle</div>
+              <div className="text-xs uppercase tracking-[0.3em] text-white/45">Why Choose Us</div>
               <div className="mt-4 space-y-4">
                 {[
-                  "Premium blank + bold front/back print positioning",
-                  "Streetwear visual language instead of generic POD-store vibes",
-                  "Built to expand into creator collabs and limited-edition drops",
+                  "Authentic tarot decks from renowned artists and publishers",
+                  "Carefully curated collection for all experience levels",
+                  "Fast worldwide shipping with secure packaging",
                 ].map((item) => (
                   <div key={item} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm text-white/75">
                     {item}
@@ -94,7 +94,7 @@ export default async function Home() {
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
               <div className="text-xs uppercase tracking-[0.3em] text-white/45">Categories</div>
-              <h2 className="mt-3 text-2xl font-semibold">Built for streetwear customisation</h2>
+              <h2 className="mt-3 text-2xl font-semibold">Explore Our Collection</h2>
             </div>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -113,9 +113,9 @@ export default async function Home() {
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
               <div className="text-xs uppercase tracking-[0.3em] text-white/45">Featured products</div>
-              <h2 className="mt-3 text-2xl font-semibold">First drop</h2>
+              <h2 className="mt-3 text-2xl font-semibold">Premium Tarot Decks</h2>
             </div>
-            <div className="text-sm text-white/45">Powered by Medusa backend</div>
+            <div className="text-sm text-white/45">Powered by Medusa</div>
           </div>
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {products.map((product, index) => (
@@ -127,16 +127,16 @@ export default async function Home() {
         <section id="how-it-works" className="mt-16 grid gap-6 rounded-[2rem] border border-white/10 bg-white/[0.03] p-8 lg:grid-cols-3">
           {[
             {
-              title: "1. Pick a base style",
-              text: "Start from hoodies or oversized sweatshirts and keep the visual language clean.",
+              title: "1. Choose Your Deck",
+              text: "Browse our curated collection of authentic tarot and oracle decks from renowned artists and publishers worldwide.",
             },
             {
-              title: "2. Add your artwork",
-              text: "Front chest, full front, back print, or text-based drop designs. This MVP positions the offer before live customiser work.",
+              title: "2. Secure Checkout",
+              text: "Safe and secure payment processing with Inflyway. We accept all major payment methods for your convenience.",
             },
             {
-              title: "3. Launch drops fast",
-              text: "Once storefront and DNS are live, you can keep feeding new products into Medusa without rebuilding the site.",
+              title: "3. Fast Delivery",
+              text: "Your deck ships within 24 hours with tracking. Carefully packaged to ensure it arrives in perfect condition.",
             },
           ].map((step) => (
             <div key={step.title} className="rounded-[1.5rem] border border-white/8 bg-black/20 p-6">

@@ -1,15 +1,15 @@
 export const siteConfig = {
-  name: process.env.NEXT_PUBLIC_SITE_NAME || "Rube Club",
-  domain: process.env.NEXT_PUBLIC_SITE_DOMAIN || "shop.rube.club",
-  title: process.env.NEXT_PUBLIC_SITE_TITLE || "Rube Club — Custom Hoodie Shop",
+  name: process.env.NEXT_PUBLIC_SITE_NAME || "Mystic Tarot",
+  domain: process.env.NEXT_PUBLIC_SITE_DOMAIN || "cargamesunblocked.xyz",
+  title: process.env.NEXT_PUBLIC_SITE_TITLE || "Mystic Tarot — Premium Tarot Cards & Divination Tools",
   description:
     process.env.NEXT_PUBLIC_SITE_DESCRIPTION ||
-    "Streetwear-inspired custom hoodie storefront for personalized prints, graphics, and creator drops.",
+    "Discover authentic tarot decks, oracle cards, and divination tools. Premium quality cards for beginners and experienced readers.",
   heroBadge:
-    process.env.NEXT_PUBLIC_HERO_BADGE || "Custom hoodie storefront MVP",
+    process.env.NEXT_PUBLIC_HERO_BADGE || "Premium Tarot Collection",
   heroTitle:
-    process.env.NEXT_PUBLIC_HERO_TITLE || "Design your drop. Wear your art.",
+    process.env.NEXT_PUBLIC_HERO_TITLE || "Unlock Your Inner Wisdom",
   heroDescription:
     process.env.NEXT_PUBLIC_HERO_DESCRIPTION ||
-    "Rube Club is a dark, streetwear-inspired storefront for custom hoodies, graphic sweatshirts, and limited creator pieces. Start with bold product storytelling, then layer on live customization later.",
+    "Explore our curated collection of authentic tarot decks, oracle cards, and divination tools. Each deck is carefully selected for its artistic beauty and spiritual depth. Perfect for beginners and experienced readers alike.",
 };
