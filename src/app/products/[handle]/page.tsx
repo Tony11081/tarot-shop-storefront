@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product-card";
 import { ProductConfigurator } from "@/components/product-configurator";
 import { ProductVisual } from "@/components/product-visual";
+import { ShareButtons } from "@/components/share-buttons";
 import { TrackProductView } from "@/components/track-product-view";
 import { TrustBar } from "@/components/trust-bar";
 import { formatPrice, getProduct, getProductPriceRange, getProducts } from "@/lib/medusa";
@@ -71,6 +72,8 @@ export default async function ProductPage({
   const category = product.categories?.[0]?.name || "Tarot deck";
   const priceLabel = formatPrice(product);
   const priceRange = getProductPriceRange(product);
+  const productUrl = `https://${siteConfig.domain}/products/${product.handle}`;
+  const productImageUrl = `https://${siteConfig.domain}/products/${product.handle}/opengraph-image`;
   const relatedProducts = products
     .filter((item) => item.handle !== product.handle)
     .sort((left, right) => {
@@ -144,6 +147,24 @@ export default async function ProductPage({
             </p>
 
             <ProductConfigurator product={product} />
+
+            <div className="mt-6 rounded-[1.5rem] border border-[color:var(--border)] bg-white/65 p-5">
+              <div className="font-mono text-[0.68rem] uppercase tracking-[0.3em] text-[color:var(--muted)]">
+                Share this deck
+              </div>
+              <p className="text-ink-soft mt-3 text-sm leading-7">
+                Send this product page to a friend, save it to Pinterest, or copy the link for gifting and wish lists.
+              </p>
+              <div className="mt-4">
+                <ShareButtons
+                  placement="product-page"
+                  title={product.title}
+                  text={`${product.title} on ${siteConfig.name}. ${product.description || story.note}`}
+                  url={productUrl}
+                  imageUrl={productImageUrl}
+                />
+              </div>
+            </div>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white/65 p-5">
