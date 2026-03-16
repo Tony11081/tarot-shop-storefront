@@ -1,149 +1,262 @@
 import Link from "next/link";
-import { CartButton } from "@/components/cart-button";
+import { LeadCaptureForm } from "@/components/lead-capture-form";
 import { ProductCard } from "@/components/product-card";
+import { ProductVisual } from "@/components/product-visual";
+import { TrustBar } from "@/components/trust-bar";
 import { getCategories, getProducts } from "@/lib/medusa";
-import { siteConfig } from "@/lib/site";
+import {
+  faqItems,
+  getCategoryCopy,
+  homeBenefits,
+  homeTrustHighlights,
+  ritualSteps,
+  siteConfig,
+} from "@/lib/site";
 
-const fallbackCategories = [
-  "Tarot Decks",
-  "Oracle Cards",
-  "Divination Tools",
-];
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const [products, categories] = await Promise.all([getProducts(), getCategories()]);
-  const visibleCategories = categories.length
-    ? categories.map((category) => category.name)
-    : fallbackCategories;
+  const featuredProducts = products.slice(0, 4);
+  const categoryBlocks = categories.length
+    ? categories
+    : [
+        { id: "beginner", name: "Beginner Tarot Decks", handle: "beginner-tarot-decks" },
+        { id: "collector", name: "Collector Decks", handle: "collector-decks" },
+        { id: "bundle", name: "Ritual Bundles", handle: "ritual-bundles" },
+      ];
+  const bundleProduct = products.find((product) => product.handle === "first-spread-ritual-bundle") || products[0];
 
   return (
-    <main className="min-h-screen px-6 py-8 text-white md:px-10 lg:px-16">
-      <div className="mx-auto max-w-7xl">
-        <header className="mb-10 flex flex-col gap-6 rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 backdrop-blur md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="text-xs uppercase tracking-[0.35em] text-white/45">{siteConfig.domain}</div>
-            <h1 className="mt-3 text-2xl font-semibold md:text-3xl">{siteConfig.name}</h1>
-          </div>
-          <nav className="flex flex-wrap gap-3 text-sm text-white/70">
-            <a href="#products" className="rounded-full border border-white/10 px-4 py-2 hover:bg-white/5">Shop</a>
-            <a href="#how-it-works" className="rounded-full border border-white/10 px-4 py-2 hover:bg-white/5">How it works</a>
-            <a href="#categories" className="rounded-full border border-white/10 px-4 py-2 hover:bg-white/5">Categories</a>
-            <CartButton />
-          </nav>
-        </header>
-
-        <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/10 via-white/[0.04] to-transparent p-8 shadow-2xl shadow-fuchsia-950/20 md:p-12">
-            <div className="mb-4 inline-flex rounded-full border border-fuchsia-400/30 bg-fuchsia-400/10 px-4 py-2 text-xs uppercase tracking-[0.28em] text-fuchsia-200">
+    <main className="px-6 py-8 md:px-10 lg:px-16">
+      <div className="mx-auto w-full max-w-7xl">
+        <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="rounded-[2.25rem] border border-[color:var(--border)] bg-[color:var(--panel)] p-8 shadow-[0_30px_80px_rgba(23,48,43,0.08)] md:p-10">
+            <div className="inline-flex rounded-full border border-[color:var(--border)] bg-white/65 px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.3em] text-[color:var(--muted)]">
               {siteConfig.heroBadge}
             </div>
-            <h2 className="max-w-3xl text-4xl font-semibold leading-tight md:text-6xl">
+            <h1 className="font-display mt-6 max-w-4xl text-6xl leading-[0.94] text-[color:var(--foreground)] md:text-7xl">
               {siteConfig.heroTitle}
-            </h2>
-            <p className="mt-6 max-w-2xl text-base leading-7 text-white/65 md:text-lg">
+            </h1>
+            <p className="text-ink-soft mt-6 max-w-2xl text-base leading-8 md:text-lg">
               {siteConfig.heroDescription}
             </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <a
-                href="#products"
-                className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:scale-[1.02]"
-              >
-                Explore Collection
-              </a>
+
+            <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/products/demo-product"
-                className="rounded-full border border-white/15 px-6 py-3 text-sm font-semibold text-white/85 transition hover:bg-white/5"
+                href="/shop"
+                className="rounded-full bg-[color:var(--foreground)] px-6 py-3 text-sm font-semibold text-[color:var(--background)] transition hover:translate-y-[-1px]"
               >
-                View Featured Deck
+                Shop the collection
               </Link>
+              <Link
+                href="/shop#beginner-tarot-decks"
+                className="rounded-full border border-[color:var(--border)] bg-white/65 px-6 py-3 text-sm font-semibold text-[color:var(--foreground)] transition hover:bg-white"
+              >
+                Shop beginner decks
+              </Link>
+            </div>
+
+            <div className="mt-10 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white/60 p-5">
+                <div className="font-mono text-[0.68rem] uppercase tracking-[0.3em] text-[color:var(--muted)]">
+                  Beginner-friendly
+                </div>
+                <div className="font-display mt-3 text-4xl leading-none text-[color:var(--foreground)]">
+                  {products.length} picks
+                </div>
+                <div className="text-ink-muted mt-2 text-sm">Decks, bundles, and ritual add-ons picked to reduce overwhelm</div>
+              </div>
+              <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white/60 p-5">
+                <div className="font-mono text-[0.68rem] uppercase tracking-[0.3em] text-[color:var(--muted)]">
+                  Shipping coverage
+                </div>
+                <div className="font-display mt-3 text-4xl leading-none text-[color:var(--foreground)]">
+                  US + EU
+                </div>
+                <div className="text-ink-muted mt-2 text-sm">Checkout is open for the United States and select European countries</div>
+              </div>
+              <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white/60 p-5">
+                <div className="font-mono text-[0.68rem] uppercase tracking-[0.3em] text-[color:var(--muted)]">
+                  Shopper support
+                </div>
+                <div className="font-display mt-3 text-4xl leading-none text-[color:var(--foreground)]">
+                  14-day
+                </div>
+                <div className="text-ink-muted mt-2 text-sm">Return window on unused decks and accessories, plus human help when choosing</div>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <TrustBar items={homeTrustHighlights} />
             </div>
           </div>
 
           <div className="grid gap-6">
-            <div className="rounded-[2rem] border border-white/10 bg-black/30 p-6">
-              <div className="text-xs uppercase tracking-[0.3em] text-white/45">Why Choose Us</div>
-              <div className="mt-4 space-y-4">
+            <ProductVisual handle="moonwake-tarot" title="Moonwake Tarot" category="Hero deck" size="detail" />
+            <div className="rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--foreground)] p-7 text-[color:var(--background)]">
+              <div className="font-mono text-[0.68rem] uppercase tracking-[0.3em] text-[color:rgba(243,234,216,0.65)]">
+                Brand angle
+              </div>
+              <div className="mt-4 grid gap-4">
                 {[
-                  "Authentic tarot decks from renowned artists and publishers",
-                  "Carefully curated collection for all experience levels",
-                  "Fast worldwide shipping with secure packaging",
+                  "Mood-led deck discovery instead of endless generic catalog pages.",
+                  "Giftable bundles that help buyers choose without tarot expertise.",
+                  "Editorial presentation that makes each product feel intentional and collectible.",
                 ].map((item) => (
-                  <div key={item} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm text-white/75">
+                  <div key={item} className="rounded-[1.4rem] border border-white/10 bg-white/10 p-4 text-sm leading-7 text-[color:rgba(243,234,216,0.8)]">
                     {item}
                   </div>
                 ))}
               </div>
             </div>
-            <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6">
-              <div className="text-xs uppercase tracking-[0.3em] text-white/45">Current catalog</div>
-              <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
-                  <div className="text-3xl font-semibold">{products.length}</div>
-                  <div className="mt-2 text-white/55">Products live</div>
-                </div>
-                <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
-                  <div className="text-3xl font-semibold">{visibleCategories.length}</div>
-                  <div className="mt-2 text-white/55">Categories seeded</div>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
 
-        <section id="categories" className="mt-16">
-          <div className="mb-6 flex items-end justify-between gap-4">
+        <section className="mt-20">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <div className="text-xs uppercase tracking-[0.3em] text-white/45">Categories</div>
-              <h2 className="mt-3 text-2xl font-semibold">Explore Our Collection</h2>
+              <div className="font-mono text-[0.7rem] uppercase tracking-[0.3em] text-[color:var(--muted)]">
+                Shop by intent
+              </div>
+              <h2 className="font-display mt-3 text-5xl leading-none text-[color:var(--foreground)]">
+                Category lanes that guide the purchase
+              </h2>
+            </div>
+            <Link href="/shop" className="text-sm font-semibold text-[color:var(--foreground)]">
+              View the full shop
+            </Link>
+          </div>
+
+          <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {categoryBlocks.map((category) => {
+              const copy = getCategoryCopy(category.name);
+              return (
+                <div
+                  key={category.id}
+                  className="rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--panel)] p-6"
+                >
+                  <div className="font-mono text-[0.68rem] uppercase tracking-[0.32em] text-[color:var(--muted)]">
+                    {copy.eyebrow}
+                  </div>
+                  <h3 className="font-display mt-3 text-3xl leading-none text-[color:var(--foreground)]">
+                    {category.name}
+                  </h3>
+                  <p className="text-ink-soft mt-4 text-sm leading-7">{copy.text}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="mt-20">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="font-mono text-[0.7rem] uppercase tracking-[0.3em] text-[color:var(--muted)]">
+                Featured decks
+              </div>
+              <h2 className="font-display mt-3 text-5xl leading-none text-[color:var(--foreground)]">
+                Start with the decks shoppers reach for first
+              </h2>
             </div>
           </div>
-          <div className="flex flex-wrap gap-3">
-            {visibleCategories.map((category) => (
-              <div
-                key={category}
-                className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm text-white/80"
+
+          <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            {featuredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-20 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+          <div className="rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--foreground)] p-8 text-[color:var(--background)]">
+            <div className="font-mono text-[0.7rem] uppercase tracking-[0.3em] text-[color:rgba(243,234,216,0.6)]">
+              Starter bundle
+            </div>
+            <h2 className="font-display mt-4 text-5xl leading-none">
+              Give a first reading something to begin with.
+            </h2>
+            <p className="mt-5 max-w-xl text-sm leading-8 text-[color:rgba(243,234,216,0.8)]">
+              Bundles work well for first-time readers and thoughtful gifts because they remove the guesswork. One order
+              can cover the deck, the setup, and the feeling of being ready to begin.
+            </p>
+            {bundleProduct ? (
+              <Link
+                href={`/products/${bundleProduct.handle}`}
+                className="mt-8 inline-flex rounded-full bg-[color:var(--background)] px-6 py-3 text-sm font-semibold text-[color:var(--foreground)]"
               >
-                {category}
+                Open the starter bundle
+              </Link>
+            ) : null}
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-3">
+            {homeBenefits.map((item) => (
+              <div key={item.title} className="rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--panel)] p-6">
+                <h3 className="font-display text-3xl leading-none text-[color:var(--foreground)]">
+                  {item.title}
+                </h3>
+                <p className="text-ink-soft mt-4 text-sm leading-7">{item.text}</p>
               </div>
             ))}
           </div>
         </section>
 
-        <section id="products" className="mt-16">
-          <div className="mb-6 flex items-end justify-between gap-4">
-            <div>
-              <div className="text-xs uppercase tracking-[0.3em] text-white/45">Featured products</div>
-              <h2 className="mt-3 text-2xl font-semibold">Premium Tarot Decks</h2>
+        <section className="mt-20 rounded-[2.25rem] border border-[color:var(--border)] bg-[color:var(--panel)] p-8 md:p-10">
+          <div className="max-w-2xl">
+            <div className="font-mono text-[0.7rem] uppercase tracking-[0.3em] text-[color:var(--muted)]">
+              How choosing gets easier
             </div>
-            <div className="text-sm text-white/45">Powered by Medusa</div>
+            <h2 className="font-display mt-3 text-5xl leading-none text-[color:var(--foreground)]">
+              A calmer path from curiosity to confidence
+            </h2>
           </div>
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {products.map((product, index) => (
-              <ProductCard key={product.id} product={product} index={index} />
+
+          <div className="mt-8 grid gap-5 lg:grid-cols-3">
+            {ritualSteps.map((step) => (
+              <div key={step.title} className="rounded-[1.75rem] border border-[color:var(--border)] bg-white/65 p-6">
+                <h3 className="font-display text-3xl leading-none text-[color:var(--foreground)]">
+                  {step.title}
+                </h3>
+                <p className="text-ink-soft mt-4 text-sm leading-7">{step.text}</p>
+              </div>
             ))}
           </div>
         </section>
 
-        <section id="how-it-works" className="mt-16 grid gap-6 rounded-[2rem] border border-white/10 bg-white/[0.03] p-8 lg:grid-cols-3">
-          {[
-            {
-              title: "1. Choose Your Deck",
-              text: "Browse our curated collection of authentic tarot and oracle decks from renowned artists and publishers worldwide.",
-            },
-            {
-              title: "2. Secure Checkout",
-              text: "Safe and secure payment processing with Inflyway. We accept all major payment methods for your convenience.",
-            },
-            {
-              title: "3. Fast Delivery",
-              text: "Your deck ships within 24 hours with tracking. Carefully packaged to ensure it arrives in perfect condition.",
-            },
-          ].map((step) => (
-            <div key={step.title} className="rounded-[1.5rem] border border-white/8 bg-black/20 p-6">
-              <div className="text-lg font-semibold">{step.title}</div>
-              <p className="mt-3 text-sm leading-6 text-white/60">{step.text}</p>
+        <div className="mt-20" id="deck-finder">
+          <LeadCaptureForm
+            eyebrow="Deck finder"
+            title="Not sure which deck to choose?"
+            description="Tell us whether you are buying your first deck, shopping for a gift, or looking for something more collectible. We will save your email and follow up with a tighter shortlist."
+            placement="home-deck-finder"
+          />
+        </div>
+
+        <section className="mt-20 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+          <div>
+            <div className="font-mono text-[0.7rem] uppercase tracking-[0.3em] text-[color:var(--muted)]">
+              FAQ snapshot
             </div>
-          ))}
+            <h2 className="font-display mt-3 text-5xl leading-none text-[color:var(--foreground)]">
+              Answer hesitation before it becomes abandonment.
+            </h2>
+            <p className="text-ink-soft mt-5 max-w-xl text-sm leading-8">
+              Tarot buyers hesitate when they are unsure which deck fits, how gifting will land, or what shipping looks
+              like. Clear answers help the order feel safe.
+            </p>
+            <Link href="/faq" className="mt-6 inline-flex text-sm font-semibold text-[color:var(--foreground)]">
+              Read the full FAQ
+            </Link>
+          </div>
+          <div className="grid gap-4">
+            {faqItems.slice(0, 4).map((item) => (
+              <div key={item.question} className="rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--panel)] p-6">
+                <h3 className="font-semibold text-[color:var(--foreground)]">{item.question}</h3>
+                <p className="text-ink-soft mt-3 text-sm leading-7">{item.answer}</p>
+              </div>
+            ))}
+          </div>
         </section>
       </div>
     </main>

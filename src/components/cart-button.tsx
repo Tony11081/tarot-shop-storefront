@@ -8,7 +8,7 @@ export function CartButton() {
   return (
     <button
       onClick={openCart}
-      className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/75 transition hover:bg-white/5"
+      className="rounded-full border border-[color:var(--border)] bg-[color:var(--foreground)] px-4 py-2 text-sm font-semibold text-[color:var(--background)] transition hover:translate-y-[-1px]"
     >
       Cart {itemCount > 0 ? `(${itemCount})` : ""}
     </button>

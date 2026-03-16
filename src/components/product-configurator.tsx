@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useCart } from "@/components/cart-provider";
-import { Product } from "@/lib/medusa";
+import { trackEvent } from "@/lib/analytics";
+import { getVariantPrice, Product } from "@/lib/medusa";
 
 function formatCurrency(amount = 0, currency = "usd") {
   return new Intl.NumberFormat("en-US", {
@@ -27,7 +29,7 @@ export function ProductConfigurator({ product }: { product: Product }) {
         (variant.options ?? []).every(
           (optionValue) => selectedOptions[optionValue.option?.title || ""] === optionValue.value
         )
-      ) ?? null
+      ) ?? variants[0] ?? null
     );
   }, [selectedOptions, variants]);
 
@@ -48,7 +50,7 @@ export function ProductConfigurator({ product }: { product: Product }) {
 
   async function handleAddToCart() {
     if (!activeVariant) {
-      setError("This combination is not available yet.");
+      setError("This edition is not available yet.");
       setMessage(null);
       return;
     }
@@ -56,20 +58,29 @@ export function ProductConfigurator({ product }: { product: Product }) {
     try {
       setError(null);
       await addItem(activeVariant.id, 1);
-      setMessage(`${product.title} · ${activeVariant.title} added to cart.`);
+      setMessage(`${product.title} added to cart.`);
+      const price = getVariantPrice(activeVariant, product.handle);
+      trackEvent("add_to_cart", {
+        handle: product.handle,
+        price: price?.amount ? price.amount / 100 : undefined,
+        title: product.title,
+        variant: activeVariant.title,
+      });
     } catch (err) {
       setMessage(null);
       setError(err instanceof Error ? err.message : "Failed to add item.");
     }
   }
 
-  const price = activeVariant?.prices?.[0];
+  const price = getVariantPrice(activeVariant, product.handle);
 
   return (
     <div className="mt-8 space-y-4">
       {(product.options ?? []).map((option) => (
-        <div key={option.id} className="rounded-2xl border border-white/8 bg-black/20 p-4">
-          <div className="text-sm font-medium text-white/80">{option.title}</div>
+        <div key={option.id} className="rounded-[1.5rem] border border-[color:var(--border)] bg-white/60 p-4">
+          <div className="font-mono text-[0.68rem] uppercase tracking-[0.3em] text-[color:var(--muted)]">
+            {option.title}
+          </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {option.values.map((value) => {
               const selected = selectedOptions[option.title] === value.value;
@@ -85,7 +96,13 @@ export function ProductConfigurator({ product }: { product: Product }) {
                     setMessage(null);
                     setError(null);
                   }}
-                  className={`rounded-full border px-4 py-2 text-sm transition ${selected ? "border-white bg-white text-black" : available ? "border-white/10 text-white/70 hover:bg-white/5" : "cursor-not-allowed border-white/5 text-white/25 line-through"}`}
+                  className={`rounded-full border px-4 py-2 text-sm transition ${
+                    selected
+                      ? "border-[color:var(--foreground)] bg-[color:var(--foreground)] text-[color:var(--background)]"
+                      : available
+                        ? "border-[color:var(--border)] bg-[color:var(--panel-strong)] text-[color:var(--foreground)] hover:bg-white"
+                        : "cursor-not-allowed border-[color:var(--border)] bg-white/30 text-[color:var(--muted)] line-through"
+                  }`}
                 >
                   {value.value}
                 </button>
@@ -95,15 +112,19 @@ export function ProductConfigurator({ product }: { product: Product }) {
         </div>
       ))}
 
-      <div className="rounded-[1.5rem] border border-white/8 bg-black/20 p-5">
+      <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--foreground)] p-5 text-[color:var(--background)]">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <div className="text-sm text-white/45">Selected variant</div>
-            <div className="mt-2 text-lg font-semibold text-white">{activeVariant?.title || "Unavailable"}</div>
+            <div className="font-mono text-[0.68rem] uppercase tracking-[0.3em] text-[color:rgba(243,234,216,0.62)]">
+              Selected edition
+            </div>
+            <div className="mt-2 text-lg font-semibold">{activeVariant?.title || "Unavailable"}</div>
           </div>
           <div className="text-right">
-            <div className="text-sm text-white/45">Price</div>
-            <div className="mt-2 text-lg font-semibold text-white">
+            <div className="font-mono text-[0.68rem] uppercase tracking-[0.3em] text-[color:rgba(243,234,216,0.62)]">
+              Price
+            </div>
+            <div className="mt-2 text-lg font-semibold">
               {price ? formatCurrency(price.amount, price.currency_code) : "—"}
             </div>
           </div>
@@ -114,17 +135,24 @@ export function ProductConfigurator({ product }: { product: Product }) {
         <button
           onClick={handleAddToCart}
           disabled={!activeVariant || adding}
-          className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full bg-[color:var(--foreground)] px-6 py-3 text-sm font-semibold text-[color:var(--background)] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {adding ? "Adding…" : "Add to cart"}
+          {adding ? "Adding..." : "Add to cart"}
         </button>
-        <button className="rounded-full border border-white/15 px-6 py-3 text-sm font-semibold text-white/85 transition hover:bg-white/5">
-          Request custom artwork
-        </button>
+        <Link
+          href="/#deck-finder"
+          className="rounded-full border border-[color:var(--border)] bg-white/55 px-6 py-3 text-center text-sm font-semibold text-[color:var(--foreground)] transition hover:bg-white"
+        >
+          Need help choosing?
+        </Link>
       </div>
 
-      {message ? <p className="text-sm text-emerald-300">{message}</p> : null}
-      {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+      <p className="text-ink-soft text-sm leading-7">
+        Clear shipping coverage, secure payment, and return help for unused decks if the pick is not right.
+      </p>
+
+      {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
+      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
     </div>
   );
 }

@@ -1,0 +1,312 @@
+{
+  "site": {
+    "name": "TarotDeck.online",
+    "slug": "tarotdeck-online",
+    "domain": "tarotdeck.online",
+    "design_brief": "Premium tarot ecommerce brand. Editorial storefront, warm parchment tones, dark botanical contrast, mystical without feeling kitsch, beginner-friendly product storytelling, giftable bundles, and a modern ritual aesthetic.",
+    "theme": {
+      "primary_color": "#12312b",
+      "accent_color": "#c38a3d",
+      "font_family": "Cormorant Garamond + Manrope"
+    },
+    "pages": [
+      {
+        "slug": "/",
+        "title": "Home",
+        "prompt": "Create a conversion-focused tarot storefront homepage with a premium hero, mood-based collection discovery, featured decks, bundle merchandising, FAQ, and strong shop CTAs."
+      },
+      {
+        "slug": "/products/[handle]",
+        "title": "Product Detail",
+        "prompt": "Create a tarot product detail page with a collectible deck presentation, ritual guidance, edition selection, purchase card, shipping reassurance, and related deck recommendations."
+      }
+    ]
+  },
+  "categories": [
+    "Beginner Tarot Decks",
+    "Collector Decks",
+    "Ritual Bundles",
+    "Reading Tools"
+  ],
+  "products": [
+    {
+      "title": "Moonwake Tarot",
+      "handle": "moonwake-tarot",
+      "description": "A soft, moonlit 78-card tarot deck designed for calm reflection, first spreads, and nightly journaling rituals.",
+      "categories": [
+        "Beginner Tarot Decks"
+      ],
+      "options": [
+        {
+          "title": "Edition",
+          "values": [
+            "Deck Only",
+            "Gift Set"
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "title": "Deck Only",
+          "sku": "TAROT-MOONWAKE-DECK",
+          "options": {
+            "Edition": "Deck Only"
+          },
+          "prices": [
+            {
+              "amount": 3400,
+              "currency_code": "usd"
+            }
+          ]
+        },
+        {
+          "title": "Gift Set",
+          "sku": "TAROT-MOONWAKE-GIFT",
+          "options": {
+            "Edition": "Gift Set"
+          },
+          "prices": [
+            {
+              "amount": 5400,
+              "currency_code": "usd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sunlit Seeker Tarot",
+      "handle": "sunlit-seeker-tarot",
+      "description": "A bright, art-forward tarot deck for intuitive beginners who want symbolic guidance that feels warm, clear, and easy to enter.",
+      "categories": [
+        "Beginner Tarot Decks"
+      ],
+      "options": [
+        {
+          "title": "Guidebook",
+          "values": [
+            "Standard",
+            "Expanded Guidebook"
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "title": "Standard",
+          "sku": "TAROT-SUNLIT-STANDARD",
+          "options": {
+            "Guidebook": "Standard"
+          },
+          "prices": [
+            {
+              "amount": 3900,
+              "currency_code": "usd"
+            }
+          ]
+        },
+        {
+          "title": "Expanded Guidebook",
+          "sku": "TAROT-SUNLIT-GUIDE",
+          "options": {
+            "Guidebook": "Expanded Guidebook"
+          },
+          "prices": [
+            {
+              "amount": 4900,
+              "currency_code": "usd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Velvet Arcana Tarot",
+      "handle": "velvet-arcana-tarot",
+      "description": "A dramatic collector deck with rich shadow tones, elegant line art, and a ceremonial feel made for altar-worthy display.",
+      "categories": [
+        "Collector Decks"
+      ],
+      "options": [
+        {
+          "title": "Finish",
+          "values": [
+            "Classic",
+            "Foil Edge"
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "title": "Classic",
+          "sku": "TAROT-VELVET-CLASSIC",
+          "options": {
+            "Finish": "Classic"
+          },
+          "prices": [
+            {
+              "amount": 5800,
+              "currency_code": "usd"
+            }
+          ]
+        },
+        {
+          "title": "Foil Edge",
+          "sku": "TAROT-VELVET-FOIL",
+          "options": {
+            "Finish": "Foil Edge"
+          },
+          "prices": [
+            {
+              "amount": 7600,
+              "currency_code": "usd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Midnight Veil Tarot",
+      "handle": "midnight-veil-tarot",
+      "description": "A deep indigo collector deck with gold-accent symbolism, designed for readers who want a more immersive and theatrical table presence.",
+      "categories": [
+        "Collector Decks"
+      ],
+      "options": [
+        {
+          "title": "Edition",
+          "values": [
+            "Standard",
+            "Collector Box"
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "title": "Standard",
+          "sku": "TAROT-MIDNIGHT-STANDARD",
+          "options": {
+            "Edition": "Standard"
+          },
+          "prices": [
+            {
+              "amount": 6200,
+              "currency_code": "usd"
+            }
+          ]
+        },
+        {
+          "title": "Collector Box",
+          "sku": "TAROT-MIDNIGHT-COLLECTOR",
+          "options": {
+            "Edition": "Collector Box"
+          },
+          "prices": [
+            {
+              "amount": 8800,
+              "currency_code": "usd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "First Spread Ritual Bundle",
+      "handle": "first-spread-ritual-bundle",
+      "description": "A beginner bundle pairing a starter tarot deck, reading cloth, and a quick-start guide for first-time readers who want less guesswork.",
+      "categories": [
+        "Ritual Bundles"
+      ],
+      "options": [
+        {
+          "title": "Bundle",
+          "values": [
+            "Starter Bundle",
+            "Bundle + Candle Set"
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "title": "Starter Bundle",
+          "sku": "TAROT-FIRSTSPREAD-STARTER",
+          "options": {
+            "Bundle": "Starter Bundle"
+          },
+          "prices": [
+            {
+              "amount": 7900,
+              "currency_code": "usd"
+            }
+          ]
+        },
+        {
+          "title": "Bundle + Candle Set",
+          "sku": "TAROT-FIRSTSPREAD-CANDLE",
+          "options": {
+            "Bundle": "Bundle + Candle Set"
+          },
+          "prices": [
+            {
+              "amount": 9900,
+              "currency_code": "usd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Linen Reading Cloth Set",
+      "handle": "linen-reading-cloth-set",
+      "description": "A pair of soft reading cloths in grounded neutral shades, made to frame spreads beautifully and protect cards between rituals.",
+      "categories": [
+        "Reading Tools"
+      ],
+      "options": [
+        {
+          "title": "Color",
+          "values": [
+            "Sand",
+            "Forest"
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "title": "Sand",
+          "sku": "TAROT-CLOTH-SAND",
+          "options": {
+            "Color": "Sand"
+          },
+          "prices": [
+            {
+              "amount": 1800,
+              "currency_code": "usd"
+            }
+          ]
+        },
+        {
+          "title": "Forest",
+          "sku": "TAROT-CLOTH-FOREST",
+          "options": {
+            "Color": "Forest"
+          },
+          "prices": [
+            {
+              "amount": 1800,
+              "currency_code": "usd"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "currency_code": "usd",
+    "status": "published"
+  },
+  "options": {
+    "reuse_sales_channel": true,
+    "skip_existing_products": true,
+    "create_publishable_key": true
+  }
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   createContext,
   ReactNode,
@@ -9,8 +10,17 @@ import {
   useMemo,
   useState,
 } from "react";
-
-const CART_STORAGE_KEY = "rube-club-cart-id";
+import {
+  CART_CLEAR_EVENT,
+  CART_STORAGE_KEY,
+  CHECKOUT_SESSION_KEY,
+} from "@/lib/cart-storage";
+import { trackEvent } from "@/lib/analytics";
+import {
+  defaultShippingCountry,
+  supportedShippingCountries,
+  supportedShippingCountriesText,
+} from "@/lib/shipping";
 
 type CartItem = {
   id: string;
@@ -29,12 +39,15 @@ type Cart = {
   shipping_methods?: Array<{ id: string }>;
 };
 
-type CompletedOrder = {
-  id: string;
-  display_id?: number;
-  status?: string;
-  total?: number;
-  currency_code?: string;
+type CheckoutPayment = {
+  amount: number;
+  cartId: string;
+  checkoutUrl: string;
+  currency: string;
+  orderId: string;
+  orderRef: string;
+  paymentUrl: string;
+  statusUrl: string;
 };
 
 type CheckoutForm = {
@@ -55,7 +68,6 @@ type CartContextValue = {
   isOpen: boolean;
   itemCount: number;
   totalFormatted: string;
-  order: CompletedOrder | null;
   checkoutError: string | null;
   openCart: () => void;
   closeCart: () => void;
@@ -92,12 +104,12 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [order, setOrder] = useState<CompletedOrder | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const loadCart = useCallback(async (cartId: string) => {
@@ -158,8 +170,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
           method: "POST",
           body: JSON.stringify({ variant_id: variantId, quantity }),
         });
+        sessionStorage.removeItem(CHECKOUT_SESSION_KEY);
         setCheckoutError(null);
-        setOrder(null);
         setCart(data.cart);
         setIsOpen(true);
       } finally {
@@ -186,26 +198,52 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       setCheckingOut(true);
       setCheckoutError(null);
+      const paymentWindow = window.open("", "_blank");
 
       try {
-        const data = await apiRequest<{ order?: CompletedOrder; type?: string }>(`/api/checkout`, {
+        const data = await apiRequest<{ payment?: CheckoutPayment }>(`/api/checkout`, {
           method: "POST",
           body: JSON.stringify({ cartId: cart.id, checkout: form }),
         });
 
-        if (data.order) {
-          setOrder(data.order);
-          setCart(null);
-          localStorage.removeItem(CART_STORAGE_KEY);
+        if (data.payment) {
+          sessionStorage.setItem(CHECKOUT_SESSION_KEY, JSON.stringify(data.payment));
+          setIsOpen(false);
+          trackEvent("begin_checkout", {
+            cart_id: cart.id,
+            country_code: form.country_code,
+            item_count: cart.items.length,
+            total: cart.total / 100,
+          });
+          if (paymentWindow) {
+            paymentWindow.location.href = data.payment.paymentUrl;
+          } else {
+            window.open(data.payment.paymentUrl, "_blank", "noopener,noreferrer");
+          }
+          router.push(data.payment.checkoutUrl);
         }
       } catch (error) {
+        paymentWindow?.close();
         setCheckoutError(error instanceof Error ? error.message : "Checkout failed");
       } finally {
         setCheckingOut(false);
       }
     },
-    [cart]
+    [cart, router]
   );
+
+  useEffect(() => {
+    const clearCart = () => {
+      setCart(null);
+      setIsOpen(false);
+      setCheckoutError(null);
+    };
+
+    window.addEventListener(CART_CLEAR_EVENT, clearCart);
+    return () => {
+      window.removeEventListener(CART_CLEAR_EVENT, clearCart);
+    };
+  }, []);
 
   const value = useMemo<CartContextValue>(() => {
     const itemCount = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
@@ -218,7 +256,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       isOpen,
       itemCount,
       totalFormatted: formatMoney(cart?.total, cart?.currency_code),
-      order,
       checkoutError,
       openCart: () => setIsOpen(true),
       closeCart: () => setIsOpen(false),
@@ -226,7 +263,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeItem,
       checkout,
     };
-  }, [cart, loading, adding, checkingOut, isOpen, order, checkoutError, addItem, removeItem, checkout]);
+  }, [cart, loading, adding, checkingOut, isOpen, checkoutError, addItem, removeItem, checkout]);
 
   return (
     <CartContext.Provider value={value}>
@@ -253,158 +290,161 @@ function CartDrawer() {
     removeItem,
     checkout,
     checkingOut,
-    order,
     checkoutError,
   } = useCart();
 
   const [form, setForm] = useState<CheckoutForm>({
-    email: "test@example.com",
-    first_name: "Tony",
-    last_name: "Buyer",
-    address_1: "123 Main St",
-    city: "Copenhagen",
-    postal_code: "2100",
-    country_code: "dk",
+    email: "",
+    first_name: "",
+    last_name: "",
+    address_1: "",
+    city: "",
+    postal_code: "",
+    country_code: defaultShippingCountry,
   });
 
   return (
     <>
       <button
         onClick={() => (isOpen ? closeCart() : undefined)}
-        className={`fixed inset-0 z-40 bg-black/50 transition ${isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
+        className={`fixed inset-0 z-40 bg-[color:rgba(17,28,24,0.45)] transition ${
+          isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+        }`}
         aria-hidden={!isOpen}
       />
       <div
-        className={`fixed right-0 top-0 z-50 h-full w-full max-w-md overflow-y-auto border-l border-white/10 bg-[#0a0a0a] p-6 shadow-2xl transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"}`}
+        className={`fixed right-0 top-0 z-50 h-full w-full max-w-md overflow-y-auto border-l border-[color:var(--border)] bg-[color:var(--panel-strong)] p-6 shadow-2xl transition-transform duration-300 ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <div className="text-xs uppercase tracking-[0.3em] text-white/45">Cart</div>
-            <div className="mt-2 text-2xl font-semibold text-white">
-              {order ? "Order placed" : `${itemCount} item${itemCount === 1 ? "" : "s"}`}
+            <div className="font-mono text-[0.68rem] uppercase tracking-[0.3em] text-[color:var(--muted)]">
+              Ritual cart
+            </div>
+            <div className="font-display mt-2 text-4xl leading-none text-[color:var(--foreground)]">
+              {`${itemCount} item${itemCount === 1 ? "" : "s"}`}
             </div>
           </div>
           <button
             onClick={closeCart}
-            className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/70 hover:bg-white/5"
+            className="rounded-full border border-[color:var(--border)] bg-white/70 px-4 py-2 text-sm text-[color:var(--foreground)] hover:bg-white"
           >
             Close
           </button>
         </div>
 
-        {order ? (
-          <div className="mt-8 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-5 text-sm text-emerald-100">
-            <div className="text-lg font-semibold">Order #{order.display_id ?? order.id}</div>
-            <p className="mt-2 leading-6 text-emerald-100/80">
-              Checkout flow completed against Medusa. Current status: {order.status ?? "pending"}.
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="mt-8 space-y-3">
-              {loading ? (
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/55">
-                  Loading cart…
-                </div>
-              ) : cart?.items?.length ? (
-                cart.items.map((item) => (
-                  <div key={item.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="font-medium text-white">{item.title}</div>
-                        <div className="mt-1 text-sm text-white/55">{item.variant_title}</div>
-                        <div className="mt-3 text-sm text-white/75">Qty {item.quantity}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-medium text-white">
-                          {formatMoney(item.unit_price * item.quantity, cart.currency_code)}
-                        </div>
-                        <button
-                          onClick={() => removeItem(item.id)}
-                          className="mt-3 text-xs uppercase tracking-[0.2em] text-white/45 hover:text-white/75"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-5 text-sm leading-6 text-white/55">
-                  Cart is empty. Pick a size and color, then drop it in here.
-                </div>
-              )}
+        <div className="mt-8 space-y-3">
+          {loading ? (
+            <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white/60 p-4 text-sm text-[color:var(--muted)]">
+              Loading cart...
             </div>
-
-            <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-              <div className="flex items-center justify-between text-sm text-white/55">
-                <span>Subtotal</span>
-                <span className="text-lg font-semibold text-white">{totalFormatted}</span>
-              </div>
-
-              <div className="mt-5 grid gap-3">
-                <input
-                  value={form.email}
-                  onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))}
-                  placeholder="Email"
-                  className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
-                />
-                <div className="grid grid-cols-2 gap-3">
-                  <input
-                    value={form.first_name}
-                    onChange={(e) => setForm((current) => ({ ...current, first_name: e.target.value }))}
-                    placeholder="First name"
-                    className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
-                  />
-                  <input
-                    value={form.last_name}
-                    onChange={(e) => setForm((current) => ({ ...current, last_name: e.target.value }))}
-                    placeholder="Last name"
-                    className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
-                  />
-                </div>
-                <input
-                  value={form.address_1}
-                  onChange={(e) => setForm((current) => ({ ...current, address_1: e.target.value }))}
-                  placeholder="Address"
-                  className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
-                />
-                <div className="grid grid-cols-3 gap-3">
-                  <input
-                    value={form.city}
-                    onChange={(e) => setForm((current) => ({ ...current, city: e.target.value }))}
-                    placeholder="City"
-                    className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
-                  />
-                  <input
-                    value={form.postal_code}
-                    onChange={(e) => setForm((current) => ({ ...current, postal_code: e.target.value }))}
-                    placeholder="Postal"
-                    className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
-                  />
-                  <input
-                    value={form.country_code}
-                    onChange={(e) => setForm((current) => ({ ...current, country_code: e.target.value.toLowerCase() }))}
-                    placeholder="Country"
-                    className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
-                  />
-                </div>
-              </div>
-
-              <p className="mt-4 text-xs leading-5 text-white/40">
-                Current MVP checkout uses Medusa payment collections + default provider, then completes the cart into an order.
-              </p>
-              <button
-                onClick={() => checkout(form)}
-                disabled={!cart?.items?.length || checkingOut}
-                className="mt-5 w-full rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
+          ) : cart?.items?.length ? (
+            cart.items.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-[1.5rem] border border-[color:var(--border)] bg-white/70 p-4"
               >
-                {checkingOut ? "Processing checkout…" : "Checkout now"}
-              </button>
-              {checkoutError ? <p className="mt-4 text-sm text-rose-300">{checkoutError}</p> : null}
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-semibold text-[color:var(--foreground)]">{item.title}</div>
+                    <div className="text-ink-subtle mt-1 text-sm">{item.variant_title}</div>
+                    <div className="text-ink-soft mt-3 text-sm">Qty {item.quantity}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium text-[color:var(--foreground)]">
+                      {formatMoney(item.unit_price * item.quantity, cart.currency_code)}
+                    </div>
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="mt-3 font-mono text-[0.68rem] uppercase tracking-[0.26em] text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-ink-muted rounded-[1.5rem] border border-dashed border-[color:var(--border)] bg-white/55 p-5 text-sm leading-7">
+              Your cart is empty. Pick a deck, a bundle, or a supporting ritual piece to begin.
             </div>
-          </>
-        )}
+          )}
+        </div>
+
+        <div className="mt-8 rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--foreground)] p-5 text-[color:var(--background)]">
+          <div className="flex items-center justify-between text-sm text-[color:rgba(243,234,216,0.7)]">
+            <span>Subtotal</span>
+            <span className="text-lg font-semibold text-[color:var(--background)]">{totalFormatted}</span>
+          </div>
+
+          <div className="mt-5 grid gap-3">
+            <input
+              value={form.email}
+              onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))}
+              placeholder="Email"
+              className="rounded-[1.25rem] border border-white/12 bg-white/10 px-4 py-3 text-sm text-[color:var(--background)] outline-none placeholder:text-[color:rgba(243,234,216,0.55)]"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                value={form.first_name}
+                onChange={(e) => setForm((current) => ({ ...current, first_name: e.target.value }))}
+                placeholder="First name"
+                className="rounded-[1.25rem] border border-white/12 bg-white/10 px-4 py-3 text-sm text-[color:var(--background)] outline-none placeholder:text-[color:rgba(243,234,216,0.55)]"
+              />
+              <input
+                value={form.last_name}
+                onChange={(e) => setForm((current) => ({ ...current, last_name: e.target.value }))}
+                placeholder="Last name"
+                className="rounded-[1.25rem] border border-white/12 bg-white/10 px-4 py-3 text-sm text-[color:var(--background)] outline-none placeholder:text-[color:rgba(243,234,216,0.55)]"
+              />
+            </div>
+            <input
+              value={form.address_1}
+              onChange={(e) => setForm((current) => ({ ...current, address_1: e.target.value }))}
+              placeholder="Address"
+              className="rounded-[1.25rem] border border-white/12 bg-white/10 px-4 py-3 text-sm text-[color:var(--background)] outline-none placeholder:text-[color:rgba(243,234,216,0.55)]"
+            />
+            <div className="grid grid-cols-3 gap-3">
+              <input
+                value={form.city}
+                onChange={(e) => setForm((current) => ({ ...current, city: e.target.value }))}
+                placeholder="City"
+                className="rounded-[1.25rem] border border-white/12 bg-white/10 px-4 py-3 text-sm text-[color:var(--background)] outline-none placeholder:text-[color:rgba(243,234,216,0.55)]"
+              />
+              <input
+                value={form.postal_code}
+                onChange={(e) => setForm((current) => ({ ...current, postal_code: e.target.value }))}
+                placeholder="Postal"
+                className="rounded-[1.25rem] border border-white/12 bg-white/10 px-4 py-3 text-sm text-[color:var(--background)] outline-none placeholder:text-[color:rgba(243,234,216,0.55)]"
+              />
+              <select
+                value={form.country_code}
+                onChange={(e) => setForm((current) => ({ ...current, country_code: e.target.value.toLowerCase() }))}
+                className="rounded-[1.25rem] border border-white/12 bg-white/10 px-4 py-3 text-sm text-[color:var(--background)] outline-none"
+              >
+                {supportedShippingCountries.map((country) => (
+                  <option key={country.code} value={country.code} className="text-[color:var(--foreground)]">
+                    {country.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <p className="mt-4 text-xs leading-6 text-[color:rgba(243,234,216,0.68)]">
+            You will review a secure payment page next. We currently ship to {supportedShippingCountriesText}, and
+            unused decks can request return approval within 14 days of delivery.
+          </p>
+          <button
+            onClick={() => checkout(form)}
+            disabled={!cart?.items?.length || checkingOut}
+            className="mt-5 w-full rounded-full bg-[color:var(--background)] px-6 py-3 text-sm font-semibold text-[color:var(--foreground)] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {checkingOut ? "Preparing secure payment..." : "Continue to secure payment"}
+          </button>
+          {checkoutError ? <p className="mt-4 text-sm text-rose-200">{checkoutError}</p> : null}
+        </div>
       </div>
     </>
   );

@@ -1,50 +1,50 @@
 import Link from "next/link";
+import { ProductVisual } from "@/components/product-visual";
 import { formatPrice, Product } from "@/lib/medusa";
+import { getProductStory } from "@/lib/site";
 
-function getFallbackVisual(index: number) {
-  const themes = [
-    "from-fuchsia-500/30 via-zinc-900 to-zinc-950",
-    "from-cyan-500/30 via-zinc-900 to-zinc-950",
-    "from-amber-400/30 via-zinc-900 to-zinc-950",
-  ];
+export function ProductCard({ product }: { product: Product }) {
+  const category = product.categories?.[0]?.name || "Tarot deck";
+  const story = getProductStory(product.handle);
 
-  return themes[index % themes.length];
-}
-
-export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
   return (
     <Link
       href={`/products/${product.handle}`}
-      className="group overflow-hidden rounded-3xl border border-white/10 bg-white/5 transition hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.08]"
+      className="group overflow-hidden rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--panel)] p-4 transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(23,48,43,0.12)]"
     >
-      <div
-        className={`flex aspect-[4/5] items-end bg-gradient-to-br p-6 ${getFallbackVisual(index)}`}
-      >
-        <div className="rounded-full border border-white/15 bg-black/30 px-3 py-1 text-xs uppercase tracking-[0.24em] text-white/70 backdrop-blur">
-          Custom drop
-        </div>
-      </div>
-      <div className="space-y-3 p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-lg font-semibold text-white">{product.title}</h3>
-            <p className="mt-2 line-clamp-2 text-sm text-white/60">
-              {product.description || "Built for bold artwork, creator drops, and one-off custom pieces."}
-            </p>
+      <ProductVisual handle={product.handle} title={product.title} category={category} />
+
+      <div className="space-y-4 p-3 pb-2 pt-5">
+        <div className="flex items-start justify-between gap-5">
+          <div className="min-w-0">
+            <div className="font-mono text-[0.68rem] uppercase tracking-[0.32em] text-[color:var(--muted)]">
+              {category}
+            </div>
+            <h3 className="font-display mt-2 text-3xl leading-none text-[color:var(--foreground)]">
+              {product.title}
+            </h3>
           </div>
-          <div className="text-sm font-semibold text-white/90">{formatPrice(product)}</div>
+          <div className="rounded-full border border-[color:var(--border)] bg-white/60 px-4 py-2 text-sm font-semibold text-[color:var(--foreground)]">
+            {formatPrice(product)}
+          </div>
         </div>
+
+        <p className="text-ink-soft text-sm leading-7">
+          {product.description || story.note}
+        </p>
 
         <div className="flex flex-wrap gap-2">
           {(product.options ?? []).map((option) => (
             <span
               key={option.id}
-              className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/50"
+              className="text-ink-soft rounded-full border border-[color:var(--border)] bg-white/55 px-3 py-1 text-xs"
             >
               {option.title}: {option.values.map((value) => value.value).join(" / ")}
             </span>
           ))}
         </div>
+
+        <div className="pt-1 text-sm font-semibold text-[color:var(--foreground)]">View deck details</div>
       </div>
     </Link>
   );

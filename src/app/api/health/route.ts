@@ -7,7 +7,7 @@ export async function GET() {
 
     return NextResponse.json({
       ok: true,
-      service: "medusa-storefront",
+      service: "tarotdeck-online-storefront",
       backendReachable: Array.isArray(data?.products),
       checkedAt: new Date().toISOString(),
     });
@@ -15,7 +15,7 @@ export async function GET() {
     return NextResponse.json(
       {
         ok: false,
-        service: "medusa-storefront",
+        service: "tarotdeck-online-storefront",
         message: error instanceof Error ? error.message : "Health check failed",
         checkedAt: new Date().toISOString(),
       },
